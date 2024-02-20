@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emotion Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+  <!-- Use ECMAScript modules syntax -->
+  
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.2.0/firebase-app.js';
+    import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.2.0/firebase-firestore.js';
+  
+    // Initialize Firebase with your configuration
+    const firebaseConfig = {
+  apiKey: "AIzaSyDHVeHZdWYRoyuQX6sS4Ia3oqRx_pf08cs",
+  authDomain: "emotions1-a73ae.firebaseapp.com",
+  projectId: "emotions1-a73ae",
+  storageBucket: "emotions1-a73ae.appspot.com",
+  messagingSenderId: "900829077149",
+  appId: "1:900829077149:web:5410d1043012d2aae73e74"
+};
+    const app = initializeApp(firebaseConfig);
+  
+    // Get a reference to the Firestore database
+    const db = getFirestore(app);
+  
+    // Function declarations
+    function startEmotionTracker() {
+  const usernameInput = document.getElementById('username');
+  const evaluator = usernameInput.value.trim();
+
+  if (!evaluator) {
+    alert('Please enter your username first.');
+    return;
+  }
+
+  console.log('Evaluator:', evaluator);
+
+  localStorage.setItem('storedUsername', evaluator);
+
+  document.getElementById('usernameSection').style.display = 'none';
+  document.getElementById('emotionTracker').style.display = 'block';
+}
+
+  
+    function addNames() {
+      const inputNames = document.getElementById('names').value;
+      const namesArray = inputNames.split(',').map(name => name.trim());
+      const tableBody = document.querySelector('#emotionTable tbody');
+  
+      namesArray.forEach(name => {
+        const newRow = tableBody.insertRow(-1);
+        newRow.insertCell(0).textContent = name;
+  
+        const emotions = ['Inactive', 'Agitated', 'Curious', 'Contented', 'Excited'];
+        for (let i = 0; i < emotions.length; i++) {
+          const checkboxCell = newRow.insertCell(i + 1);
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.name = `emotion_${name}_${i}`;
+          checkbox.value = emotions[i];
+          checkboxCell.appendChild(checkbox);
+        }
+      });
+    }
+  
+    async function submitData() {
+  const evaluator = localStorage.getItem('storedUsername');
+
+  if (!evaluator) {
+    alert('Please enter your username first.');
+    return;
+  }
+
+  const tableBody = document.querySelector('#emotionTable tbody');
+
+  const promises = [];
+
+  tableBody.querySelectorAll('tr').forEach(row => {
+    const username = row.cells[0].textContent;
+    const selectedEmotions = Array.from(row.cells)
+      .slice(1)
+      .filter(cell => cell.childNodes[0].checked)
+      .map(cell => cell.childNodes[0].value);
+
+    const docRef = doc(db, 'emotions', username + '_' + Date.now());
+    const promise = setDoc(docRef, {
+      evaluator: evaluator,
+      username: username,
+      selectedEmotions: selectedEmotions,
+      timestamp: serverTimestamp()
+    });
+
+    promises.push(promise);
+  });
+
+  // Wait for all promises to resolve
+  try {
+    await Promise.all(promises);
+    console.log('All documents written successfully');
+    // Show alert after all documents are written
+    alert('Submitted successfully!');
+    // Refresh the page after all documents are written
+    location.reload();
+  } catch (error) {
+    console.error('Error adding documents: ', error);
+    alert('Error adding documents. Check console for details.');
+  }
+}
+
+  
+    // Export functions to make them accessible in other modules
+    window.startEmotionTracker = startEmotionTracker;
+    window.addNames = addNames;
+    window.submitData = submitData;
+  </script>
+  
+</head>
+<body>
+
+<div id="usernameSection">
+
+  <label for="username">Enter Your Username:</label>
+  <input type="text" id="username" placeholder="YourUsername">
+  <button onclick="startEmotionTracker()">Submit</button>
+
+</div>
+
+<div id="emotionTracker" style="display: none;">
+
+  <h1>Emotion Tracker</h1>
+
+  <label for="names">Enter Names (comma-separated):</label>
+  <input type="text" id="names" placeholder="Name1, Name2, Name3">
+  <button onclick="addNames()">Add Names</button>
+
+  <table id="emotionTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Inactive</th>
+        <th>Agitated</th>
+        <th>Curious</th>
+        <th>Contented</th>
+        <th>Excited</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+  <button onclick="submitData()">Submit Data to Firestore</button>
+
+</div>
+
+</body>
+</html>
