@@ -69,7 +69,7 @@
         const newRow = tableBody.insertRow(-1);
         newRow.insertCell(0).textContent = name;
   
-        const emotions = ['Inactive', 'Agitated', 'Curious', 'Contented', 'Excited'];
+        const emotions = ['Bored', 'Distracted', 'Curious', 'Contented', 'Excited'];
         for (let i = 0; i < emotions.length; i++) {
           const checkboxCell = newRow.insertCell(i + 1);
           const checkbox = document.createElement('input');
@@ -155,8 +155,8 @@
     <thead>
       <tr>
         <th>Name</th>
-        <th>Inactive</th>
-        <th>Agitated</th>
+        <th>Bored</th>
+        <th>Distracted</th>
         <th>Curious</th>
         <th>Contented</th>
         <th>Excited</th>
